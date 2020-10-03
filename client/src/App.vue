@@ -1,17 +1,25 @@
 <template>
 	<div id="app">
-		<video-player :options="videoOptions"/>
+		<landing-page/>
+		<!-- <video-player :options="videoOptions"/> -->
 	</div>
 </template>
 
 <script>
 // import HelloWorld from './components/HelloWorld.vue'
-import VideoPlayer from './components/VideoPlayer.vue'
+// import VideoPlayer from './components/VideoPlayer.vue'
+import LandingPage from './components/LandingPage.vue'
+import * as config from '../config.dev.js';
+
 export default {
 	name: 'App',
 	components: {
 		// HelloWorld,
-		VideoPlayer
+		// VideoPlayer,
+		LandingPage
+	},
+	mounted(){
+		this.config = config;
 	},
 	data() {
 		return {
@@ -20,12 +28,12 @@ export default {
 				controls: true,
 				sources: [
 					{
-						src:"http://localhost:8080/stream/out.m3u8",
+						// src:"http://localhost:8080/stream/out.m3u8",
+						src: config.NGINX_ENDPOINT + "/out.m3u8",
 						type: "application/x-mpegURL",
 					},
 				],
-				width:"640",
-				height:"264"
+
 			}
 		};
 	}
@@ -41,4 +49,5 @@ export default {
 	color: #2c3e50;
 	margin-top: 60px;
 }
+
 </style>
