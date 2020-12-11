@@ -25,7 +25,7 @@ export class Room extends React.Component {
       },
     ],
   };
-  upload_element: any;
+  // upload_element: HTMLFormElement;
 
   constructor(props: Props) {
     super(props);
@@ -52,9 +52,11 @@ export class Room extends React.Component {
     console.log("fileupload::", this.state);
 
     // let upload_element = document.getElementById('single_upload')
-    this.upload_element = React.createRef();
-    var formData = new FormData(this.upload_element);
+    // this.upload_element = React.createRef();
+    // var formData = new FormData(this.upload_element);
     // formData.append("file", this.state.selectedFile);
+    var formData = new FormData();
+    formData.append("file", this.state.selectedFile);
     formData.append("room_id", this.state.room_id);
     console.log(formData.get("room_id"));
     console.log(formData.get("selectedFile"));
@@ -62,11 +64,12 @@ export class Room extends React.Component {
     let response = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "multipart/form-data",
+        // "Content-Type": "multipart/form-data",
         room_id: this.state.room_id,
       },
       body: formData,
     });
+    this.setState({ fileUploaded: true });
   };
 
   render() {
@@ -81,7 +84,6 @@ export class Room extends React.Component {
             type="file"
             onChange={this.handleFileChange}
             name="file"
-            ref={this.upload_element}
           ></input>
           <button type="submit" onClick={this.handleUpload}>
             Upload
