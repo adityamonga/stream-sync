@@ -6,6 +6,7 @@ const path = require("path");
 const config = require("../../config.dev.json");
 const fs = require("fs");
 const bodyParser = require("body-parser");
+const ffmpeg = require("fluent-ffmpeg");
 
 class App {
   public express;
@@ -27,20 +28,34 @@ class App {
     );
     // let upload = multer({ dest: config.MEDIA_DIR_BASE + "/" });
     // this.express.use(multer());
+    // var storage = multer.diskStorage({
+    //   destination: function (req, file, cb) {
+    //     cb(null, config.MEDIA_DIR_BASE + req.headers.room_id);
+    //   },
+    //   filename: function (req, file, cb) {
+    //     cb(null, file.originalname);
+    //   },
+    // });
+
+    // this.upload = multer({ storage: storage });
+    // var upload = multer({ storage: storage });
+    // console.log(this.upload);
+    console.log("App initiated");
+  }
+
+  private mountRoutes(): void {
     var storage = multer.diskStorage({
       destination: function (req, file, cb) {
-        cb(null, config.MEDIA_DIR_BASE + req.headers.room_id);
+        cb(null, path.join(config.MEDIA_DIR_BASE, req.headers.room_id));
       },
       filename: function (req, file, cb) {
         cb(null, file.originalname);
       },
     });
 
-    this.upload = multer({ storage: storage });
-    console.log(this.upload);
-  }
+    // this.upload = multer({ storage: storage });
+    var upload = multer({ storage: storage });
 
-  private mountRoutes(): void {
     const router = express.Router();
     router.get("/", (req, res) => {
       res.send("Server running..");
@@ -64,14 +79,33 @@ class App {
           console.log("failed with err: " + err);
         });
     });
-    router.post("/upload", this.upload.single(""), (req, res) => {
-      // router.post("/upload", this.upload.single("file"), (req, res) => {
-      console.log(req.headers.room_id);
-      console.log(req.body);
+    router.post("/upload", upload.single("file"), (req, res) => {
+      console.log("room_id -> " + req.headers.room_id);
       console.log(req.file);
-
-      res.send("got it..");
+      console.log("got it..");
+      let output_filename = convert_to_hls(req.file.destination, req.file.path);
     });
+
+    function convert_to_hls(filepath, filename) {
+      let output_filename = path.join(filepath, "out.m3u8");
+      const command = ffmpeg(filename)
+        .videoBitrate(1024)
+        .videoCodec("libx264")
+        .audioBitrate("128k")
+        .audioChannels(2)
+        .addOption("-hls_time", 10)
+        .addOption("-hls_list_size", 0)
+        .on("end", function () {
+          console.log("file has been converted succesfully");
+        })
+        .on("error", function (err) {
+          console.log("an error happened: " + err.message);
+        })
+        .save(output_filename);
+
+      console.log("converted and written to -> " + output_filename);
+      return output_filename;
+    }
 
     this.express.use(cors());
     this.express.use("/", router);
