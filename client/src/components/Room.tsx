@@ -2,6 +2,8 @@ import React from "react";
 import "../App.css";
 import VideoPlayer from "./VideoPlayer";
 import { RouteComponentProps } from "react-router";
+import { on } from "process";
+import { VideoJsPlayerOptions } from "video.js";
 const config = require("../config.dev.json");
 const path = require("path");
 const axios = require("axios");
@@ -19,13 +21,11 @@ export class Room extends React.Component {
     controls: true,
     sources: [
       {
-        // src: "http://localhost:8080/stream/out.m3u8",
-        src: null,
+        src: "",
         type: "application/x-mpegURL",
       },
     ],
   };
-  // upload_element: HTMLFormElement;
 
   constructor(props: Props) {
     super(props);
@@ -51,46 +51,52 @@ export class Room extends React.Component {
     let url = config.SERVER_ENDPOINT + "/upload";
     console.log("fileupload::", this.state);
 
-    // let upload_element = document.getElementById('single_upload')
-    // this.upload_element = React.createRef();
-    // var formData = new FormData(this.upload_element);
-    // formData.append("file", this.state.selectedFile);
     var formData = new FormData();
     formData.append("file", this.state.selectedFile);
     formData.append("room_id", this.state.room_id);
     console.log(formData.get("room_id"));
-    console.log(formData.get("selectedFile"));
 
-    let response = await fetch(url, {
+    console.log("we do reach here");
+    console.log(this.state);
+    await fetch(url, {
       method: "POST",
       headers: {
         // "Content-Type": "multipart/form-data",
         room_id: this.state.room_id,
       },
       body: formData,
+    }).then((response) => {
+      if (response.ok) {
+        console.log("media loaded");
+        this.setState({ fileUploaded: true });
+      } else {
+        throw new Error(response.statusText);
+      }
     });
-    this.setState({ fileUploaded: true });
   };
 
   render() {
     return (
       <div>
-        {/* {this.state.fileUploaded ? (
-          <VideoPlayer {...this.videoJsOptions} />
-        ) : ( */}
         <div>
-          {/* <form name="single_upload" id="single_upload"> */}
+          {/* <form onSubmit={this.handleUpload}> */}
           <input
             type="file"
             onChange={this.handleFileChange}
             name="file"
           ></input>
           <button type="submit" onClick={this.handleUpload}>
+            {/* <button type="submit" value="submit"> */}
             Upload
           </button>
           {/* </form> */}
         </div>
-        {/* )} */}
+        <p> this is the state:: {this.state.fileUploaded ? "True" : "False"}</p>
+        {this.state.fileUploaded ? (
+          <VideoPlayer {...this.videoJsOptions} />
+        ) : (
+          <p>Nothing found</p>
+        )}
       </div>
     );
   }

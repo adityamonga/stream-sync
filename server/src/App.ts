@@ -84,6 +84,7 @@ class App {
       console.log(req.file);
       console.log("got it..");
       let output_filename = convert_to_hls(req.file.destination, req.file.path);
+      res.send("got it...");
     });
 
     function convert_to_hls(filepath, filename) {
